@@ -1,12 +1,12 @@
 #include <pebble.h>
 
 Window *my_window;
-TextLayer *text_layer;
+TextLayer *stroke_count_layer;
 int StrokeStatus = 0;
 int StrokeCount = 0;
 CompassHeadingData compasdata;
 long int heading = 999;
-static char strokecounttext[20];
+static char strokecounttext[5];
 
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
@@ -36,8 +36,8 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
          if ((data[i].y < -500) && (StrokeStatus == 0)) {
             StrokeStatus = 1;
             StrokeCount++;
-            snprintf(strokecounttext, sizeof(strokecounttext),"---%d---", StrokeCount);
-            text_layer_set_text(text_layer, strokecounttext);
+            snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
+            text_layer_set_text(stroke_count_layer, strokecounttext);
          }
         
                                                              
@@ -55,10 +55,13 @@ void handle_init(void) {
    uint32_t num_samples = 5;  // Number of samples per batch/callback
    my_window = window_create();
 
-   text_layer = text_layer_create(GRect(0, 0, 144, 20));
-   text_layer_set_text(text_layer, "000");
+   stroke_count_layer = text_layer_create(GRect(12, 20, 120, 40));
+   text_layer_set_text(stroke_count_layer, "000");
+   text_layer_set_text_alignment(stroke_count_layer, GTextAlignmentRight);
+   text_layer_set_font(stroke_count_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+   text_layer_set_background_color(stroke_count_layer, GColorGreen);
    Layer *root_layer = window_get_root_layer(my_window);
-   layer_add_child(root_layer, text_layer_get_layer(text_layer));
+   layer_add_child(root_layer, text_layer_get_layer(stroke_count_layer));
 
    
    window_stack_push(my_window, true);
@@ -72,7 +75,7 @@ void handle_init(void) {
 }
 
 void handle_deinit(void) {
-   text_layer_destroy(text_layer);
+   text_layer_destroy(stroke_count_layer);
 //    compass_service_unsubscribe();
    accel_data_service_unsubscribe();
    window_destroy(my_window);
