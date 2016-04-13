@@ -2,11 +2,27 @@
 
 Window *my_window;
 TextLayer *stroke_count_layer;
+TextLayer *lap_count_layer;
+TextLayer *stroke_time_layer;
 int StrokeStatus = 0;
 int StrokeCount = 0;
+int LapCount = 0;
 CompassHeadingData compasdata;
 long int heading = 999;
 static char strokecounttext[5];
+static char lapcounttext[5];
+static char stroketimetext[10];
+time_t new_seconds = 0;
+uint16_t new_milliseconds = 0;
+time_t prev_seconds = 0;
+uint16_t prev_milliseconds = 0;
+
+uint16_t time_diff_ms() {
+   uint16_t diff_milliseconds;
+   time_t diff_seconds = new_seconds - prev_seconds;
+   diff_milliseconds = diff_seconds * 1000;
+   return diff_milliseconds + new_milliseconds - prev_milliseconds;
+}
 
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
@@ -38,6 +54,21 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
             StrokeCount++;
             snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
             text_layer_set_text(stroke_count_layer, strokecounttext);
+            time_ms(&new_seconds, &new_milliseconds);
+            if (prev_milliseconds != 0) {
+               uint16_t stroketime = time_diff_ms();
+               snprintf(stroketimetext, sizeof(stroketimetext),"%d", stroketime);
+               text_layer_set_text(stroke_time_layer, stroketimetext);
+               
+               if (stroketime > 6000){
+                  LapCount++;
+                  snprintf(lapcounttext, sizeof(lapcounttext),"%d", LapCount);
+                  text_layer_set_text(lap_count_layer, lapcounttext);
+               }
+                  
+            }
+            prev_seconds = new_seconds;
+            prev_milliseconds = new_milliseconds;
          }
         
                                                              
@@ -56,12 +87,24 @@ void handle_init(void) {
    my_window = window_create();
 
    stroke_count_layer = text_layer_create(GRect(12, 20, 120, 40));
+   stroke_time_layer = text_layer_create(GRect(12, 65, 120, 40));
+   lap_count_layer = text_layer_create(GRect(12, 110, 120, 40));
    text_layer_set_text(stroke_count_layer, "000");
+   text_layer_set_text(stroke_time_layer, "0000");
+   text_layer_set_text(lap_count_layer, "0");
    text_layer_set_text_alignment(stroke_count_layer, GTextAlignmentRight);
+   text_layer_set_text_alignment(stroke_time_layer, GTextAlignmentRight);
+   text_layer_set_text_alignment(lap_count_layer, GTextAlignmentRight);
    text_layer_set_font(stroke_count_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+   text_layer_set_font(stroke_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+   text_layer_set_font(lap_count_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
    text_layer_set_background_color(stroke_count_layer, GColorGreen);
+   text_layer_set_background_color(lap_count_layer, GColorGreen);
+   text_layer_set_background_color(stroke_time_layer, GColorYellow);
    Layer *root_layer = window_get_root_layer(my_window);
    layer_add_child(root_layer, text_layer_get_layer(stroke_count_layer));
+   layer_add_child(root_layer, text_layer_get_layer(lap_count_layer));
+   layer_add_child(root_layer, text_layer_get_layer(stroke_time_layer));
 
    
    window_stack_push(my_window, true);
