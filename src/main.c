@@ -100,21 +100,21 @@ void handle_init(void) {
    uint32_t num_samples = 5;  // Number of samples per batch/callback
    my_window = window_create();
 
-   stroke_count_layer = text_layer_create(GRect(5, 10, 135, 40));
-   stroke_time_layer = text_layer_create(GRect(5, 60, 135, 40));
-   lap_count_layer = text_layer_create(GRect(5, 110, 135, 40));
+   stroke_count_layer = text_layer_create(GRect(5, 5, 135, 50));
+   stroke_time_layer = text_layer_create(GRect(5, 60, 135, 50));
+   lap_count_layer = text_layer_create(GRect(5, 115, 135, 50));
    text_layer_set_text(stroke_count_layer, "000");
    text_layer_set_text(stroke_time_layer, "0000");
    text_layer_set_text(lap_count_layer, "0");
    text_layer_set_text_alignment(stroke_count_layer, GTextAlignmentRight);
    text_layer_set_text_alignment(stroke_time_layer, GTextAlignmentRight);
    text_layer_set_text_alignment(lap_count_layer, GTextAlignmentRight);
-   text_layer_set_font(stroke_count_layer, fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS));
+   text_layer_set_font(stroke_count_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
    text_layer_set_font(stroke_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-   text_layer_set_font(lap_count_layer, fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS));
-   text_layer_set_background_color(stroke_count_layer, GColorGreen);
-   text_layer_set_background_color(lap_count_layer, GColorGreen);
-   text_layer_set_background_color(stroke_time_layer, GColorYellow);
+   text_layer_set_font(lap_count_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
+   text_layer_set_background_color(stroke_count_layer, GColorYellow);
+   text_layer_set_background_color(lap_count_layer, GColorYellow);
+   text_layer_set_background_color(stroke_time_layer, GColorGreen);
    Layer *root_layer = window_get_root_layer(my_window);
    layer_add_child(root_layer, text_layer_get_layer(stroke_count_layer));
    layer_add_child(root_layer, text_layer_get_layer(lap_count_layer));

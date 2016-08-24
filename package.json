@@ -1,0 +1,29 @@
+{
+    "author": "erik.rakhorst@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "stroke",
+    "pebble": {
+        "capabilities": [
+            ""
+        ],
+        "displayName": "Stroke",
+        "enableMultiJS": true,
+        "messageKeys": {},
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "27e6dc92-05a5-4d7a-86a7-e72eac46405a",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "0.1.0"
+}
