@@ -18,6 +18,7 @@ time_t new_seconds = 0;
 uint16_t new_milliseconds = 0;
 time_t prev_seconds = 0;
 uint16_t prev_milliseconds = 0;
+bool isPaused = true;
 
 uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
    uint32_t diff_milliseconds = 0;
@@ -37,64 +38,86 @@ uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
 
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
    
-   time_ms(&new_seconds, &new_milliseconds);
-   if (prev_seconds == 0) {
-      prev_seconds = new_seconds;
-      prev_milliseconds = new_milliseconds;
-      lap_seconds = new_seconds;
-      lap_milliseconds = new_milliseconds;
-   }
-   uint32_t laptime = time_diff_ms(lap_seconds, lap_milliseconds);
-//    APP_LOG(APP_LOG_LEVEL_INFO, "=== %ld = %d ===", lap_seconds, lap_milliseconds);
-
-   snprintf(stroketimetext, sizeof(stroketimetext),"%li", laptime);
-   text_layer_set_text(stroke_time_layer, stroketimetext);
-
-   for (int i=0; i < (int)num_samples; i++){
-   
-      if(!data[i].did_vibrate) {
-         // Print it out
-//          APP_LOG(APP_LOG_LEVEL_DEBUG, "t: %lu, x: %d, y: %d, z: %d",
-//                  (unsigned long)(data[i].timestamp),
-//                  data[i].x,
-//                  data[i].y,
-//                  data[i].z);
-
-
-         if(data[i].y > 500) {
-            StrokeStatus = 0;
-         } 
-         if ((data[i].y < -500) && (StrokeStatus == 0)) {
-            StrokeStatus = 1;
-            StrokeCount++;
-            snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
-            text_layer_set_text(stroke_count_layer, strokecounttext);
-            if (prev_milliseconds != 0) {
-               uint32_t stroketime = time_diff_ms(prev_seconds, prev_milliseconds);
-               
-               if ((stroketime < 1000) && (laptime >10000)){
-                  lap_seconds = new_seconds;
-                  lap_milliseconds = new_milliseconds;
-                  LapCount++;
-                  snprintf(lapcounttext, sizeof(lapcounttext),"%d", LapCount);
-                  text_layer_set_text(lap_count_layer, lapcounttext);
-               }
-                  
-            }
-            prev_seconds = new_seconds;
-            prev_milliseconds = new_milliseconds;
-         }
-        
-                                                             
-      } else {
-         // Discard with a warning
-         APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
+   if(isPaused == false){
+      time_ms(&new_seconds, &new_milliseconds);
+      if (prev_seconds == 0) {
+         prev_seconds = new_seconds;
+         prev_milliseconds = new_milliseconds;
+         lap_seconds = new_seconds;
+         lap_milliseconds = new_milliseconds;
       }
+      uint32_t laptime = time_diff_ms(lap_seconds, lap_milliseconds);
+   //    APP_LOG(APP_LOG_LEVEL_INFO, "=== %ld = %d ===", lap_seconds, lap_milliseconds);
+   
+      snprintf(stroketimetext, sizeof(stroketimetext),"%li", laptime);
+      text_layer_set_text(stroke_time_layer, stroketimetext);
+   
+      for (int i=0; i < (int)num_samples; i++){
+      
+         if(!data[i].did_vibrate) {
+            // Print it out
+   //          APP_LOG(APP_LOG_LEVEL_DEBUG, "t: %lu, x: %d, y: %d, z: %d",
+   //                  (unsigned long)(data[i].timestamp),
+   //                  data[i].x,
+   //                  data[i].y,
+   //                  data[i].z);
+   
+   
+            if(data[i].y > 500) {
+               StrokeStatus = 0;
+            } 
+            if ((data[i].y < -500) && (StrokeStatus == 0)) {
+               StrokeStatus = 1;
+               StrokeCount++;
+               snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
+               text_layer_set_text(stroke_count_layer, strokecounttext);
+               if (prev_milliseconds != 0) {
+                  uint32_t stroketime = time_diff_ms(prev_seconds, prev_milliseconds);
+                  
+                  if ((stroketime < 1000) && (laptime >10000)){
+                     lap_seconds = new_seconds;
+                     lap_milliseconds = new_milliseconds;
+                     LapCount++;
+                     snprintf(lapcounttext, sizeof(lapcounttext),"%d", LapCount);
+                     text_layer_set_text(lap_count_layer, lapcounttext);
+                  }
+                     
+               }
+               prev_seconds = new_seconds;
+               prev_milliseconds = new_milliseconds;
+            }
+           
+                                                                
+         } else {
+            // Discard with a warning
+            APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
+         }
+      }
+      APP_LOG(APP_LOG_LEVEL_INFO, "=== %d ===", StrokeCount);
+         
    }
-   APP_LOG(APP_LOG_LEVEL_INFO, "=== %d ===", StrokeCount);
+
 }
 
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // A single click has just occured
+   isPaused = !(isPaused);
+}
 
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // A single click has just occured
+   if (isPaused){
+      LapCount = 0;
+      StrokeCount = 0;
+   }
+}
+
+static void click_config_provider(void *context) {
+   //subscribe to button
+   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+
+}
 
 void handle_init(void) {
    uint32_t num_samples = 5;  // Number of samples per batch/callback
@@ -122,6 +145,9 @@ void handle_init(void) {
 
    
    window_stack_push(my_window, true);
+   window_set_click_config_provider(my_window, click_config_provider);
+
+
 
    // Subscribe to batched data events
    accel_data_service_subscribe(num_samples, accel_data_handler);

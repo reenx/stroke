@@ -4,12 +4,9 @@
     "keywords": [],
     "name": "stroke",
     "pebble": {
-        "capabilities": [
-            ""
-        ],
         "displayName": "Stroke",
         "enableMultiJS": true,
-        "messageKeys": {},
+        "messageKeys": [],
         "projectType": "native",
         "resources": {
             "media": []
