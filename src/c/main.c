@@ -7,6 +7,7 @@ TextLayer *stroke_time_layer;
 int StrokeStatus = 0;
 int StrokeCount = 0;
 int LapCount = 0;
+uint32_t laptime;
 CompassHeadingData compasdata;
 long int heading = 999;
 static char strokecounttext[5];
@@ -36,6 +37,17 @@ uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
    return diff_milliseconds;
 }
 
+static void update_texts(){
+   snprintf(stroketimetext, sizeof(stroketimetext),"%li", laptime);
+   text_layer_set_text(stroke_time_layer, stroketimetext);
+
+   snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
+   text_layer_set_text(stroke_count_layer, strokecounttext);
+
+   snprintf(lapcounttext, sizeof(lapcounttext),"%d", LapCount);
+   text_layer_set_text(lap_count_layer, lapcounttext);
+}
+
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
    
    if(isPaused == false){
@@ -46,31 +58,17 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
          lap_seconds = new_seconds;
          lap_milliseconds = new_milliseconds;
       }
-      uint32_t laptime = time_diff_ms(lap_seconds, lap_milliseconds);
-   //    APP_LOG(APP_LOG_LEVEL_INFO, "=== %ld = %d ===", lap_seconds, lap_milliseconds);
-   
-      snprintf(stroketimetext, sizeof(stroketimetext),"%li", laptime);
-      text_layer_set_text(stroke_time_layer, stroketimetext);
+      laptime = time_diff_ms(lap_seconds, lap_milliseconds);
    
       for (int i=0; i < (int)num_samples; i++){
       
          if(!data[i].did_vibrate) {
-            // Print it out
-   //          APP_LOG(APP_LOG_LEVEL_DEBUG, "t: %lu, x: %d, y: %d, z: %d",
-   //                  (unsigned long)(data[i].timestamp),
-   //                  data[i].x,
-   //                  data[i].y,
-   //                  data[i].z);
-   
-   
             if(data[i].y > 500) {
                StrokeStatus = 0;
             } 
             if ((data[i].y < -500) && (StrokeStatus == 0)) {
                StrokeStatus = 1;
                StrokeCount++;
-               snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
-               text_layer_set_text(stroke_count_layer, strokecounttext);
                if (prev_milliseconds != 0) {
                   uint32_t stroketime = time_diff_ms(prev_seconds, prev_milliseconds);
                   
@@ -78,16 +76,14 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
                      lap_seconds = new_seconds;
                      lap_milliseconds = new_milliseconds;
                      LapCount++;
-                     snprintf(lapcounttext, sizeof(lapcounttext),"%d", LapCount);
-                     text_layer_set_text(lap_count_layer, lapcounttext);
                   }
                      
                }
                prev_seconds = new_seconds;
                prev_milliseconds = new_milliseconds;
             }
-           
-                                                                
+            update_texts();        
+                                                                   
          } else {
             // Discard with a warning
             APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
@@ -109,6 +105,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
    if (isPaused){
       LapCount = 0;
       StrokeCount = 0;
+      update_texts();
    }
 }
 
