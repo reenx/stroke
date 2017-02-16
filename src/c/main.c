@@ -20,6 +20,7 @@ uint16_t new_milliseconds = 0;
 time_t prev_seconds = 0;
 uint16_t prev_milliseconds = 0;
 bool isPaused = true;
+static uint16_t stroketimes[1024];
 
 uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
    uint32_t diff_milliseconds = 0;
@@ -38,7 +39,7 @@ uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
 }
 
 static void update_texts(){
-   snprintf(stroketimetext, sizeof(stroketimetext),"%li", laptime);
+   snprintf(stroketimetext, sizeof(stroketimetext),"%i", stroketimes[StrokeCount]);
    text_layer_set_text(stroke_time_layer, stroketimetext);
 
    snprintf(strokecounttext, sizeof(strokecounttext),"%d", StrokeCount);
@@ -69,10 +70,10 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
             if ((data[i].y < -500) && (StrokeStatus == 0)) {
                StrokeStatus = 1;
                StrokeCount++;
+               stroketimes[StrokeCount] = time_diff_ms(prev_seconds, prev_milliseconds);
                if (prev_milliseconds != 0) {
-                  uint32_t stroketime = time_diff_ms(prev_seconds, prev_milliseconds);
                   
-                  if ((stroketime < 1000) && (laptime >10000)){
+                  if ((stroketimes[StrokeCount]  < 1000) && (laptime >10000)){
                      lap_seconds = new_seconds;
                      lap_milliseconds = new_milliseconds;
                      LapCount++;
@@ -89,7 +90,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
             APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
          }
       }
-      APP_LOG(APP_LOG_LEVEL_INFO, "=== %d ===", StrokeCount);
+//       APP_LOG(APP_LOG_LEVEL_INFO, "=== %d ===", StrokeCount);
          
    }
 
@@ -109,10 +110,24 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
    }
 }
 
-static void click_config_provider(void *context) {
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // A single click has just occured
+   int i;
+   if (isPaused){
+      for(i=0; i<1024; i++){
+         APP_LOG(APP_LOG_LEVEL_INFO, "%d,%d",i , stroketimes[i]);
+         
+      }
+   }
+}
+
+
+void click_config_provider(void *context) {
    //subscribe to button
    window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 
 }
 
