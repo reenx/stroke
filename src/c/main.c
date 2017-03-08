@@ -189,7 +189,7 @@ void handle_deinit(void) {
    uint8_t bufferpart = 0;
    for (bufferpart = 0; bufferpart < bufferparts; bufferpart++)
    {
-      persist_write_data(bufferpart+1, (void *) &(stroketimes[bufferpart * PERSIST_DATA_MAX_LENGTH]), PERSIST_DATA_MAX_LENGTH);
+      persist_write_data(bufferpart + 1, (void *) &(stroketimes[(bufferpart * PERSIST_DATA_MAX_LENGTH)/2]), PERSIST_DATA_MAX_LENGTH);
    }
 
    text_layer_destroy(stroke_count_layer);
