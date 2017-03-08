@@ -20,7 +20,9 @@ uint16_t new_milliseconds = 0;
 time_t prev_seconds = 0;
 uint16_t prev_milliseconds = 0;
 bool isPaused = true;
-static uint16_t stroketimes[1024];
+#define STROKE_BUFFER_LENGTH (8 * PERSIST_DATA_MAX_LENGTH)
+#define STROKE_DATA_LENGTH (STROKE_BUFFER_LENGTH / 2)
+static uint16_t stroketimes[STROKE_DATA_LENGTH];
 
 uint32_t time_diff_ms(time_t base_seconds, uint16_t base_milliseconds) {
    uint32_t diff_milliseconds = 0;
@@ -73,7 +75,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
                stroketimes[StrokeCount] = time_diff_ms(prev_seconds, prev_milliseconds);
                if (prev_milliseconds != 0) {
                   
-                  if ((stroketimes[StrokeCount]  < 1000) && (laptime >10000)){
+                  if ((stroketimes[StrokeCount]  > 3000) && (laptime >10000)){
                      lap_seconds = new_seconds;
                      lap_milliseconds = new_milliseconds;
                      LapCount++;
@@ -115,7 +117,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   // A single click has just occured
    int i;
    if (isPaused){
-      for(i=0; i<1024; i++){
+      for(i=0; i<STROKE_DATA_LENGTH; i++){
          APP_LOG(APP_LOG_LEVEL_INFO, "%d,%d",i , stroketimes[i]);
          
       }
@@ -132,6 +134,19 @@ void click_config_provider(void *context) {
 }
 
 void handle_init(void) {
+   uint8_t bufferparts = 8;
+   uint8_t bufferpart = 0;
+   APP_LOG(APP_LOG_LEVEL_INFO, "max data length %d", PERSIST_DATA_MAX_LENGTH );
+   APP_LOG(APP_LOG_LEVEL_INFO, "buffersize %d", STROKE_DATA_LENGTH);
+   for (bufferpart = 0; bufferpart < bufferparts; bufferpart++)
+   {
+      APP_LOG(APP_LOG_LEVEL_INFO, "Reading persist part: %d (offset=%d)", bufferpart,(bufferpart * PERSIST_DATA_MAX_LENGTH)/2 );
+      if (persist_exists(bufferpart + 1)){
+         //dit werkt alleen als persist_data_max_length even is.
+         persist_read_data(bufferpart + 1, (void *) &(stroketimes[(bufferpart * PERSIST_DATA_MAX_LENGTH)/2]), PERSIST_DATA_MAX_LENGTH);
+      }
+   }
+   APP_LOG(APP_LOG_LEVEL_INFO, "reading done");
    uint32_t num_samples = 5;  // Number of samples per batch/callback
    my_window = window_create();
 
@@ -170,6 +185,13 @@ void handle_init(void) {
 }
 
 void handle_deinit(void) {
+   uint8_t bufferparts = 8;
+   uint8_t bufferpart = 0;
+   for (bufferpart = 0; bufferpart < bufferparts; bufferpart++)
+   {
+      persist_write_data(bufferpart+1, (void *) &(stroketimes[bufferpart * PERSIST_DATA_MAX_LENGTH]), PERSIST_DATA_MAX_LENGTH);
+   }
+
    text_layer_destroy(stroke_count_layer);
 //    compass_service_unsubscribe();
    accel_data_service_unsubscribe();
