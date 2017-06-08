@@ -65,7 +65,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
    
       for (int i=0; i < (int)num_samples; i++){
       
-         if(!data[i].did_vibrate) {
+//          if(!data[i].did_vibrate) {
             if(data[i].y > 500) {
                StrokeStatus = 0;
             } 
@@ -87,10 +87,10 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
             }
             update_texts();        
                                                                    
-         } else {
-            // Discard with a warning
-            APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
-         }
+//          } else {
+//             // Discard with a warning
+//             APP_LOG(APP_LOG_LEVEL_WARNING, "Vibration occured during collection");
+//          }
       }
 //       APP_LOG(APP_LOG_LEVEL_INFO, "=== %d ===", StrokeCount);
          
