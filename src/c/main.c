@@ -105,9 +105,14 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   // A single click has just occured
+   int i;
    if (isPaused){
       LapCount = 0;
       StrokeCount = 0;
+      for(i=0; i<STROKE_DATA_LENGTH; i++){
+	      stroketimes[i] = 0;
+         
+      }
       update_texts();
    }
 }
