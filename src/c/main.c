@@ -7,6 +7,7 @@ TextLayer *stroke_time_layer;
 int StrokeStatus = 0;
 int StrokeCount = 0;
 int LapCount = 0;
+int LastLapChange = 0;
 uint32_t laptime;
 CompassHeadingData compasdata;
 long int heading = 999;
@@ -75,7 +76,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
                stroketimes[StrokeCount] = time_diff_ms(prev_seconds, prev_milliseconds);
                if (prev_milliseconds != 0) {
                   
-                  if ((stroketimes[StrokeCount]  > 3000) && (laptime >10000)){
+                  if ((stroketimes[StrokeCount]  > 3000) && ( (StrokeCount - LastLapChange  ) > 10)){
                      lap_seconds = new_seconds;
                      lap_milliseconds = new_milliseconds;
                      LapCount++;
