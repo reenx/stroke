@@ -80,6 +80,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
                      lap_seconds = new_seconds;
                      lap_milliseconds = new_milliseconds;
                      LapCount++;
+		     LastLapChange = StrokeCount;
                   }
                      
                }
